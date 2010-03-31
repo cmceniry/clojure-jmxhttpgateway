@@ -1,5 +1,5 @@
 
-(ns jmxgateway
+(ns jmxhttpgateway
     (:require clojure.contrib.jmx)
     (:import (javax.management.remote JMXConnectorFactory JMXServiceURL))
 )
