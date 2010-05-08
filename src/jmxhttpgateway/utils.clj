@@ -17,7 +17,7 @@
   "Get back a value, nil if there's an exception"
   [connection bean attribute]
   (try
-   (get-bean-attribute conn bean attribute)
+   (get-bean-attribute connection bean attribute)
    (catch Exception _ nil)))
 
 (defn get-bean-attributes
