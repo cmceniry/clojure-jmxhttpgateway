@@ -13,12 +13,24 @@
   (binding [jmx/*connection* connection]
 	   (jmx/read bean attribute)))
 
+(defn get-bean-attribute-with-catch
+  "Get back a value, nil if there's an exception"
+  [connection bean attribute]
+  (try
+   (get-bean-attribute conn bean attribute)
+   (catch Exception _ nil)))
+
 (defn get-bean-attributes
   "Get all attribute values back"
   [connection bean]
+  (binding [jmx/*connection* connection]
+	   (jmx/mbean bean)))
+
+(defn get-bean-attributes-with-catch
+  "Get all attribute values back, {} if there's an exception"
+  [connection bean]
   (try
-   (binding [jmx/*connection* connection]
-	    (jmx/mbean bean))
+   (get-bean-attributes connection bean)
    (catch Exception _ {})))
 
 (defn connect
