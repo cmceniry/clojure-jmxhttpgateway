@@ -21,7 +21,9 @@
 (defn get-bean-attribute-with-retry
   "Gets an attribute value - reconnecting if necessary"
   [conn bean-name attribute attempts]
-  (jmxhttpgateway.utils/get-bean-attribute conn bean-name attribute))
+  (try
+   (jmxhttpgateway.utils/get-bean-attribute conn bean-name attribute)
+   (catch Exception _ nil)))
 
 (defn pp-bean-attribute ""
   [conn bean-name attribute-name]
