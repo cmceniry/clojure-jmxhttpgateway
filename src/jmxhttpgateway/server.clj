@@ -18,12 +18,20 @@
         (@pool target))
       (@pool target)))
 
+; This seems like a great place for lazy evaluation
+; but not sure on how to approach that
+; so using the borrowing old recur
 (defn get-bean-attribute-with-retry
   "Gets an attribute value - reconnecting if necessary"
   [conn bean-name attribute attempts]
-  (try
-   (jmxhttpgateway.utils/get-bean-attribute conn bean-name attribute)
-   (catch Exception _ nil)))
+  (if (= attempts 0)
+      nil
+      (let [val (jmxhttpgateway.utils/get-bean-attribute-with-catch conn
+								    bean-name
+								    attribute)]
+	   (if (nil? val)
+	       (recur conn bean-name attribute (- attempts 1))
+	       val))))
 
 (defn pp-bean-attribute ""
   [conn bean-name attribute-name]
