@@ -18,6 +18,12 @@
         (@pool target))
       (@pool target)))
 
+(defn remove-connection
+  "Removes a connection from the pool"
+  [target]
+  (dosync
+   (alter pool dissoc target)))
+
 ; This seems like a great place for lazy evaluation
 ; but not sure on how to approach that
 ; so using the borrowing old recur
@@ -31,7 +37,9 @@
 								    bean-name
 								    attribute)]
 	   (if (nil? val)
-	       (recur target bean-name attribute (- attempts 1))
+	       (do
+		(remove-connection target)
+		(recur target bean-name attribute (- attempts 1)))
 	       val))))
 
 (defn pp-bean-attribute ""
