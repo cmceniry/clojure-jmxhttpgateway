@@ -18,10 +18,17 @@
         (@pool target))
       (@pool target)))
 
+(defn get-bean-attribute-with-retry
+  "Gets an attribute value - reconnecting if necessary"
+  [conn bean-name attribute attempts]
+  (jmxhttpgateway.utils/get-bean-attribute conn bean-name attribute))
+
 (defn pp-bean-attribute ""
   [conn bean-name attribute-name]
-  (str attribute-name " : "
-       (jmxhttpgateway.utils/get-bean-attribute conn bean-name attribute-name)))
+  (let [val (get-bean-attribute-with-retry conn bean-name attribute-name 5)]
+       (if (nil? val)
+           nil
+           (str attribute-name " : " val))))
 
 (defn basic-get [request]
   {:status  200
