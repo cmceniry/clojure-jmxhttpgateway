@@ -7,7 +7,16 @@
   )
 )
 
-(def pool (jmxhttpgateway.utils/setup-pool '("localhost:2011")))
+(def pool (ref {}))
+
+(defn get-connection
+  "Gets a jmx connection - opening it if necessary"
+  [target]
+  (if (nil? (@pool target))
+      (dosync
+        (alter pool assoc target (jmxhttpgateway.utils/connect-with-catch target))
+        (@pool target))
+      (@pool target)))
 
 (defn pp-bean-attribute ""
   [conn bean-name attribute-name]
@@ -17,7 +26,7 @@
 (defn basic-get [request]
   {:status  200
    :headers {}
-   :body    (pp-bean-attribute (pool (:JMXConn (:params request)))
+   :body    (pp-bean-attribute (get-connection (:JMXConn (:params request)))
                                (:JMXBean (:params request))
                                (:JMXAttribute (:params request)))})
 
