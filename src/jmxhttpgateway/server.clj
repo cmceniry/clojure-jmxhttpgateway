@@ -23,19 +23,20 @@
 ; so using the borrowing old recur
 (defn get-bean-attribute-with-retry
   "Gets an attribute value - reconnecting if necessary"
-  [conn bean-name attribute attempts]
+  [target bean-name attribute attempts]
   (if (= attempts 0)
       nil
-      (let [val (jmxhttpgateway.utils/get-bean-attribute-with-catch conn
+      (let [conn (get-connection target)
+	    val (jmxhttpgateway.utils/get-bean-attribute-with-catch conn
 								    bean-name
 								    attribute)]
 	   (if (nil? val)
-	       (recur conn bean-name attribute (- attempts 1))
+	       (recur target bean-name attribute (- attempts 1))
 	       val))))
 
 (defn pp-bean-attribute ""
-  [conn bean-name attribute-name]
-  (let [val (get-bean-attribute-with-retry conn bean-name attribute-name 5)]
+  [target bean-name attribute-name]
+  (let [val (get-bean-attribute-with-retry target bean-name attribute-name 5)]
        (if (nil? val)
            nil
            (str attribute-name " : " val))))
@@ -43,7 +44,7 @@
 (defn basic-get [request]
   {:status  200
    :headers {}
-   :body    (pp-bean-attribute (get-connection (:JMXConn (:params request)))
+   :body    (pp-bean-attribute (:JMXConn (:params request))
                                (:JMXBean (:params request))
                                (:JMXAttribute (:params request)))})
 
