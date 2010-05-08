@@ -3,4 +3,6 @@
   :dependencies [[org.clojure/clojure "1.1.0"]
                  [org.clojure/clojure-contrib "1.0-SNAPSHOT"]
                  [compojure "0.3.2"]]
-  :namespaces [jmxhttpgateway])
+  :namespaces [jmxhttpgateway.server
+               jmxhttpgateway.utils]
+  :main jmxhttpgateway/server)

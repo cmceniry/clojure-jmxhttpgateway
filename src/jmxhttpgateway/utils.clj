@@ -1,7 +1,8 @@
 
-(ns jmxhttpgateway
-    (:require clojure.contrib.jmx)
-    (:import (javax.management.remote JMXConnectorFactory JMXServiceURL))
+(ns jmxhttpgateway.utils
+  (:gen-class)
+  (:require clojure.contrib.jmx)
+  (:import (javax.management.remote JMXConnectorFactory JMXServiceURL))
 )
 
 (alias 'jmx 'clojure.contrib.jmx)
