@@ -33,13 +33,26 @@
    (get-bean-attributes connection bean)
    (catch Exception _ {})))
 
+(defn bare-connect
+  "Helper function that does the actual connect."
+  [serviceurl]
+  (let [conn (.getMBeanServerConnection (JMXConnectorFactory/connect serviceurl))]
+    conn))
+
 (defn connect
-  "Connect to a JMX listener"
+  "Connect to a JMX listener.  Abort after 10 seconds."
   [hostport]
-  (.getMBeanServerConnection
-   (JMXConnectorFactory/connect
-    (JMXServiceURL. 
-     (str "service:jmx:rmi:///jndi/rmi://" hostport "/jmxrmi")))))
+  (let [serviceurl (JMXServiceURL.
+                    (str "service:jmx:rmi:///jndi/rmi://" hostport "/jmxrmi"))
+        f (future (bare-connect serviceurl))]
+    (try
+     (let [val (.get f 10000 java.util.concurrent.TimeUnit/MILLISECONDS)]
+       val)
+     (catch java.util.concurrent.TimeoutException
+            _
+            (do
+             (try (.cancel f true) (catch Exception _ nil))
+             nil)))))
 
 (defn connect-with-catch
   "Connect to a JMX listener but pass back nil if unable to connect"
