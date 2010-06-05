@@ -88,3 +88,54 @@
 ;	  (println (get-bean-attributes connection "org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=example.A"))
 ;	  (. Thread (sleep 5000))
 ;	(recur)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Command/config line processing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn get-default-server-properties
+  "Set the default server properties"
+  []
+  {"listenerport" 8080})
+
+(defn merge-server-properties
+  "Merge the server properties of two hashes"
+  [orig newbies]
+  (if (empty? newbies)
+      orig
+      (let [pair (first newbies)
+            propname (first pair)
+            propval (second pair)]
+       (recur
+        (assoc orig propname propval)
+        (dissoc newbies propname)))))
+
+(defn get-server-properties-from-file
+  "Load properties from a file"
+  [filename]
+  (let [contents (slurp filename)
+ 	buf (new java.io.StringReader contents)
+	properties (new java.util.Properties)]
+    (.load properties buf)
+    (into {} 
+     (map (fn [prop]
+           {prop
+            (.get properties (str "jmxhttpgateway." prop))}
+          ) ["listenerport"]))))
+      
+(defn get-server-properties
+  "Pull off the command line arguments and get the server properties"
+  [args]
+  (let [defaults (get-default-server-properties)]
+    (if (nil? args)
+      	defaults
+      	(merge-server-properties defaults
+       	 (get-server-properties-from-file (first args))))))
+
+(defn get-listenerport
+  "Get the port from the arguments"
+  [properties]
+  (let [propval (properties "listenerport")]
+  (if (= java.lang.Integer (type propval))
+      propval
+      (. Integer parseInt propval))))
+

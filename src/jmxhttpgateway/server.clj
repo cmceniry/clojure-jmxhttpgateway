@@ -57,5 +57,7 @@
                                (:JMXAttribute (:params request)))})
 
 (defn -main [& args]
-  (compojure/run-server {:port 8080}
-    "/*" (compojure/servlet (compojure.http.request/with-request-params basic-get))))
+  (let [server-properties (jmxhttpgateway.utils/get-server-properties args)
+        port (jmxhttpgateway.utils/get-listenerport server-properties)]
+  (compojure/run-server {:port port}
+    "/*" (compojure/servlet (compojure.http.request/with-request-params basic-get)))))
