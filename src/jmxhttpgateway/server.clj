@@ -1,9 +1,8 @@
 (ns jmxhttpgateway.server
-  (:gen-class)
   (:require
-    compojure
-    compojure.http.request
-    jmxhttpgateway.utils
+    [ring.adapter.jetty :as ring]
+    [ring.middleware.params]
+    [jmxhttpgateway.utils :as utils]
   )
 )
 
@@ -14,7 +13,7 @@
   [target]
   (if (nil? (@pool target))
       (dosync
-        (alter pool assoc target (jmxhttpgateway.utils/connect-with-catch target))
+        (alter pool assoc target (utils/connect-with-catch target))
         (@pool target))
       (@pool target)))
 
@@ -26,14 +25,14 @@
 
 ; This seems like a great place for lazy evaluation
 ; but not sure on how to approach that
-; so using the borrowing old recur
+; so using the boring old recur
 (defn get-bean-attribute-with-retry
   "Gets an attribute value - reconnecting if necessary"
   [target bean-name attribute attempts]
   (if (= attempts 0)
       nil
       (let [conn (get-connection target)
-	    val (jmxhttpgateway.utils/get-bean-attribute-with-catch conn
+	    val (utils/get-bean-attribute-with-catch conn
 								    bean-name
 								    attribute)]
 	   (if (nil? val)
@@ -49,15 +48,37 @@
            nil
            (str attribute-name " : " val))))
 
-(defn basic-get [request]
+(defn basic-get
+  "Handles the GET method. Expects JMXConn, JMXBean, and JMXAttribtue to be parameters"
+  [request]
   {:status  200
    :headers {}
-   :body    (pp-bean-attribute (:JMXConn (:params request))
-                               (:JMXBean (:params request))
-                               (:JMXAttribute (:params request)))})
+   :body    (pp-bean-attribute
+     ((:params request) "JMXConn")
+     ((:params request) "JMXBean")
+     ((:params request) "JMXAttribute")
+   )
+  }
+)
+
+(defn handler
+  "General request dispatcher"
+  [request]
+  (case (:request-method request)
+    :get (basic-get request)
+    {:status 501 :headers {"Content-Type" "text/plain"} :body "Not implemented\n"}
+  )
+)
+
+(def app
+  (-> handler
+    (ring.middleware.params/wrap-params)
+  )
+)
 
 (defn -main [& args]
-  (let [server-properties (jmxhttpgateway.utils/get-server-properties args)
-        port (jmxhttpgateway.utils/get-listenerport server-properties)]
-  (compojure/run-server {:port port}
-    "/*" (compojure/servlet (compojure.http.request/with-request-params basic-get)))))
+  (let [server-properties (utils/get-server-properties args)
+        port (utils/get-listenerport server-properties)]
+    (ring/run-jetty app {:port port})
+  )
+)

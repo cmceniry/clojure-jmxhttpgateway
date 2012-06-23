@@ -1,11 +1,12 @@
 
 (ns jmxhttpgateway.utils
   (:gen-class)
-  (:require clojure.contrib.jmx)
+  (:require
+    [clojure.java.jmx :as jmx]
+  )
   (:import (javax.management.remote JMXConnectorFactory JMXServiceURL))
 )
 
-(alias 'jmx 'clojure.contrib.jmx)
 
 (defn get-bean-attribute
   "Get back a value"
@@ -135,7 +136,7 @@
   "Get the port from the arguments"
   [properties]
   (let [propval (properties "listenerport")]
-  (if (= java.lang.Integer (type propval))
+  (if (= java.lang.Long (type propval))
       propval
-      (. Integer parseInt propval))))
+      (Long/parseLong propval))))
 
